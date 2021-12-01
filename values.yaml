@@ -1,0 +1,70 @@
+namespace: production
+
+deployment:
+  backend:
+    replicaCount: 1
+    name: backend
+    image:
+      repository: "alexspedan/netologybackend"
+      pullPolicy: IfNotPresent
+      tag: "latest"
+    ports:
+      containerPort: 9000
+    env:
+      - name: "DATABASE_URL"
+        value: "postgres://postgres:postgres@db:5432/news"
+    service:
+      port: 9000
+
+  frontend:
+    replicaCount: 1
+    name: frontend
+    image:
+      repository: "alexspedan/netologyfrontend"
+      pullPolicy: IfNotPresent
+      tag: "latest"
+    ports:
+      containerPort: 80
+    env:
+      - name: "BASE_URL"
+        value: "http://backend:9000"
+    service:
+      port: 80
+
+statefulset:
+  replicaCount: 1
+  name: db
+  image:
+    repository: postgres
+    pullPolicy: IfNotPresent
+    tag: "13-alpine"
+  ports:
+    containerPort: 5432
+  env:
+    - name: POSTGRES_PASSWORD
+      value: postgres
+    - name: POSTGRES_USER
+      value: postgres
+    - name: POSTGRES_DB
+      value: news
+  service:
+    port: 5432
+
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+   limits:
+     cpu: 400m
+     memory: 512Mi
+   requests:
+     cpu: 400m
+     memory: 512Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
